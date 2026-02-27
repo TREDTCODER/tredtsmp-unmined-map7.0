@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>uNmINeD</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="lib/ol.css">
+    <script src="lib/ol.js"></script>
+    <link href="lib/ol-contextmenu.css" rel="stylesheet">
+    <script src="lib/ol-contextmenu.iife.js"></script>
+    <script type="text/javascript" src="lib/toastify-js"></script>
+    <link rel="stylesheet" type="text/css" href="lib/toastify.min.css">
+    <script type="text/javascript" src="unmined.map.properties.js"></script>
+    <script type="text/javascript" src="unmined.map.regions.js"></script>
+    <script type="text/javascript" src="unmined.map.players.js"></script>
+    <script type="text/javascript" src="custom.markers.js"></script>
+    <script type="text/javascript" src="unmined.js"></script>
+    <link rel="stylesheet" type="text/css" href="index.css">
+
+    <style>
+        body { margin: 0; background: black; overflow: hidden; font-family: 'Minecraftia', monospace; }
+        @font-face { font-family: 'Minecraftia'; src: url('minecraftia.ttf'); }
+
+        .overlay-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        .fade {
+            opacity: 0; transition: opacity 2s ease-in-out;
+        }
+
+        .show { opacity: 1; }
+
+        .title-text {
+            font-size: 2rem; color: #0ff; text-shadow: 0 0 20px #0ff, 0 0 40px #0ff;
+            text-align: center;
+        }
+
+        .copyright {
+            position: absolute; bottom: 20px; font-size: 1rem; color: #0ff; text-shadow: 0 0 5px #0ff;
+        }
+
+        /* --- SIDE MENU CSS --- */
+
+        /* Hamburger icon moved to bottom-right */
+        #hamburger {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            width: 30px;
+            height: 25px;
+            cursor: pointer;
+            z-index: 10001; /* above everything */
+        }
+        #hamburger div {
+            background-color: #0ff;
+            height: 4px;
+            margin: 5px 0;
+            border-radius: 2px;
+            transition: background-color 0.3s;
+        }
+        #hamburger:hover div {
+            background-color: #66ffff;
+        }
+
+        /* Side menu panel */
+        #sideMenu {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            top: 0; left: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 60px;
+            z-index: 10000;
+            color: #0ff;
+            font-family: 'Minecraftia', monospace;
+            box-shadow: 2px 0 10px #0ff99;
+        }
+        #sideMenu ul {
+            list-style: none;
+            padding: 0 15px;
+            margin: 0;
+        }
+        #sideMenu ul li {
+            padding: 12px 10px;
+            border-bottom: 1px solid #0a0a0a;
+            cursor: pointer;
+            font-size: 1rem;
+            user-select: none;
+        }
+        #sideMenu ul li:hover {
+            background-color: #005577;
+        }
+
+        /* Overlay when menu is open */
+        #menuOverlay {
+            position: fixed;
+            display: none;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,255,255,0.1);
+            z-index: 9999;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay" class="overlay-screen">
+        <div id="loading-text" class="title-text fade">Loading TREDT SMP Map...</div>
+        <div id="welcome-text" class="title-text fade" style="display:none">
+            Welcome to TREDT SMP Map<br>2D with 3D Effects and Shadows
+        </div>
+        <div class="copyright">©TREDT Publications Society(Regd.) 2025 - 2026</div>
+    </div>
+
+    <div id="map" style="display:none"></div>
+
+    <!-- Hamburger icon bottom-right -->
+    <div id="hamburger" title="Open Locations Menu">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+    <!-- Side menu -->
+    <div id="sideMenu">
+        <ul id="locationList">
+            <!-- populated by JS -->
+        </ul>
+    </div>
+
+    <!-- Overlay for menu -->
+    <div id="menuOverlay"></div>
+
+    <script>
+        const overlay = document.getElementById('overlay');
+        const loadingText = document.getElementById('loading-text');
+        const welcomeText = document.getElementById('welcome-text');
+        const hamburger = document.getElementById('hamburger');
+        const sideMenu = document.getElementById('sideMenu');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const locationList = document.getElementById('locationList');
+
+        const locations = [
+            { name: "Spawn Valley", x: 21, z: -10 },
+            { name: "Highest Point of Spawn Valley", x: 168, z: 29 },
+            { name: "Floating Castle", x: 19, z: 1725 },
+            { name: "Flanders Village", x: 89, z: 2172 },
+            { name: "TREDT Union Stock Exchange", x: 517, z: 2332 },
+            { name: "Presidential Grand House", x: 290, z: 2460 },
+            { name: "TREDT Trading House", x: 476, z: 2527 },
+            { name: "Tsarland Radio Tower", x: 328, z: 2605 },
+            { name: "Central Imperial Bank of TREDT", x: 536, z: 2617 },
+            { name: "Tsarland Council for State Governors UNOFFICIAL", x: 385, z: 2671 },
+            { name: "TTCO. Berry Farm", x: 315, z: 2739 },
+            { name: "TTCO Guest House", x: 341, z: 2844 },
+            { name: "Company Estate Inspeactor House", x: 424, z: 2792 },
+            { name: "Union Execution Island", x: 636, z: 2843 },
+            { name: "Ember Vale Forest", x: 240, z: 2790 },
+            { name: "Zarist Star Satellite", x: 173, z: 2862 },
+            { name: "Ronrei Residence", x: 143, z: 2809 },
+            { name: "Joseph's Residence", x: 82, z: 2731 },
+            { name: "IBT 2nd Branch", x: 294, z: 2953 },
+            { name: "IBT 3rd Branch", x: -261, z: 3077 },
+            { name: "HDG MSB Das Residency", x: -113, z: 2880 },
+            { name: "Old Parliament Building", x: 155, z: 2760 },
+            { name: "Capital Horse Stable", x: 182, z: 2722 },
+            { name: "Tsar Map and Brewing House", x: 122, z: 2645 },
+            { name: "Foundational House", x: 140, z: 2602 },
+            { name: "Tsarland High Court of Justice", x: 77, z: 2644 },
+            { name: "Khan's Residency", x: 200, z: 2632 },
+            { name: "Das's Residence", x: 86, z: 2509 },
+            { name: "Server Control Center", x: -19, z: 2650 },
+            { name: "Aaron's Residency", x: -175, z: 2411 },
+            { name: "TREDT Trading Adminsitration Hall", x: -175, z: 2552 },
+            { name: "Khan 2nd Residency", x: -34, z: 2520 },
+            { name: "Chugh's Residency", x: -367, z: 2793 },
+            { name: "VTC Trading Center", x: -320, z: 2159 },
+            { name: "Hood Village", x: -359, z: 2460 },
+            { name: "Monument of Peace", x: 126, z: 2718 },
+            { name: "Capital Watch Tower", x: 105, z: 2635 },
+            { name: "Steam Engine 1st Prototype", x: 37, z: 2640 },
+            { name: "Sunil Yatch", x: 311, z: 3033 },
+            { name: "Titanic Replica", x: 944, z: 2565 },
+            { name: "SDD Pvt Island", x: 682, z: 3271 },
+            { name: "Server House", x: 1851, z: 155 },
+            { name: "URSC Railways", x: 2340, z: 571 },
+            { name: "Vizlandia Legislative House", x: 1966, z: 616 },
+            { name: "Vizlandia Governor's Mansion", x: 1844, z: 581 },
+            { name: "Royal House of Traders (RTCO HQ.)", x: 1770, z: 926 },
+            { name: "House of War and Defence", x: 2110, z: 616 },
+            { name: "TTCO Timber Factory", x: 2078, z: 963 },
+            { name: "RTCO Winery", x: 1920, z: 887 },
+            { name: "TREDT Industries House of Companies", x: 2145, z: 713 },
+            { name: "Vizlandia Market Place", x: 1960, z: 711 },
+            { name: "Vizlandia Memorial for Iron Golems", x: 1980, z: 813 },
+            { name: "Vizlandia State Library Chamber", x: 2036, z: 796 },
+            { name: "Vizlandia High Court of Justice", x: 2084, z: 817 },
+            { name: "Vizlandia State Radio Station", x: 2255, z: 687 },
+            { name: "Das's 2nd Residence", x: 2212, z: 818 },
+            { name: "Bob Family House", x: 2040, z: 716 },
+            { name: "Trader's Street", x: 1829, z: 715 },
+            { name: "State Arena", x: 1791, z: 682 },
+            { name: "Entrance Street", x: 1834, z: 802 },
+            { name: "Crabland House of Goverment", x: 3973, z: 2528 },
+            { name: "Downtown for Agricultural District of State", x: 4281, z: 2962 },
+            { name: "Uptown for Residencial District of State", x: 3867, z: 2949 },
+            { name: "Weapons Store House", x: 3800, z: 2760 },
+            { name: "Official's Colony", x: 3979, z: 2731 },
+            { name: "Academy of Personnels", x: 4189, z: 2733 },
+            { name: "Fort Vasto", x: 3885, z: 3290 },
+            { name: "Union War Memorial & Defence HQ", x: 1157, z: 4580 },
+            { name: "House of Representative of the Members of Union", x: 735, z: 4533 },
+            { name: "Imperial Court of Justice of TREDT", x: 793, z: 4773 },
+            { name: "Council of States of TREDT", x: 569, z: 4607 },
+            { name: "State of Kaisergrad", x: 763, z: 6497 },
+            { name: "City Tower for the Far Future", x: -1535, z: 1491 },
+            { name: "Lost City", x: -2981, z: 1403 },
+            { name: "Crown Estates", x: -2890, z: 1846 },
+            { name: "Cemetery for the Fallen", x: -1818, z: 103 },
+            { name: "RESITRICTED AREA", x: 1759, z: 4428 }
+        ];
+
+        // Populate menu with only names (no coords)
+        locations.forEach(loc => {
+            const li = document.createElement('li');
+            li.textContent = loc.name;
+            locationList.appendChild(li);
+        });
+
+        function openMenu() {
+            sideMenu.style.width = "300px";
+            menuOverlay.style.display = "block";
+        }
+        function closeMenu() {
+            sideMenu.style.width = "0";
+            menuOverlay.style.display = "none";
+        }
+
+        hamburger.addEventListener('click', openMenu);
+        menuOverlay.addEventListener('click', closeMenu);
+
+        // Existing overlay / loading logic below:
+
+        // Step 1: Show loading text (fade in 2.5s, fade out 2.5s)
+        setTimeout(() => loadingText.classList.add('show'), 100);
+        setTimeout(() => loadingText.classList.remove('show'), 2600);
+
+        // Step 2: Show welcome text (fade in 2s, fade out 2s)
+        setTimeout(() => {
+            loadingText.style.display = 'none';
+            welcomeText.style.display = 'block';
+            setTimeout(() => welcomeText.classList.add('show'), 100);
+        }, 5100);
+        setTimeout(() => welcomeText.classList.remove('show'), 7100);
+
+        // Step 3: Load map after welcome
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            document.getElementById('map').style.display = 'block';
+            initMap();
+        }, 9200);
+
+        function initMap() {
+            document.title = UnminedMapProperties.worldName + " - TREDT SMP";
+            if (UnminedCustomMarkers?.isEnabled && UnminedCustomMarkers.markers) {
+                UnminedMapProperties.markers = [...(UnminedMapProperties.markers || []), ...UnminedCustomMarkers.markers];
+            }
+            if (UnminedPlayers?.length > 0) {
+                UnminedMapProperties.playerMarkers = Unmined.createPlayerMarkers(UnminedPlayers);
+            }
+            const unmined = new Unmined(document.getElementById('map'), UnminedMapProperties, UnminedRegions);
+        }
+    </script>
+</body>
+</html>

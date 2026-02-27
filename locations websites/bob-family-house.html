@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Location Details</title>
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+        padding: 0;
+        text-align: center;
+        transition: all 0.3s ease;
+        line-height: 1.6;
+    }
+
+    h1 {
+        margin-top: 30px;
+        font-size: 2.5rem;
+        letter-spacing: 1px;
+    }
+
+    hr {
+        width: 80%;
+        border: none;
+        border-top: 2px solid currentColor;
+        margin: 15px auto 30px auto;
+    }
+
+    /* Gallery */
+    .gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center;
+        margin-bottom: 30px;
+        padding: 0 10px;
+    }
+    .gallery img {
+        width: 250px;
+        height: 170px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid;
+        cursor: pointer;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    }
+    .gallery img:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Details box */
+    .details {
+        background: rgba(0, 0, 0, 0.03);
+        padding: 20px 30px;
+        border-radius: 10px;
+        width: fit-content;
+        margin: auto;
+        text-align: left;
+        border: 1px solid currentColor;
+    }
+    .details p {
+        margin: 8px 0;
+    }
+    .details strong {
+        display: inline-block;
+        width: 120px;
+    }
+
+    /* Footer */
+    footer {
+        margin-top: 40px;
+        padding: 15px;
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    /* Fullscreen modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 999;
+        padding-top: 50px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: rgba(0,0,0,0.95);
+    }
+    .modal img {
+        margin: auto;
+        display: block;
+        max-width: 90%;
+        max-height: 80%;
+        border-radius: 8px;
+    }
+    .close {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        user-select: none;
+    }
+    .nav-btn {
+        position: absolute;
+        top: 50%;
+        font-size: 40px;
+        cursor: pointer;
+        user-select: none;
+        padding: 16px;
+        background: rgba(0,0,0,0.4);
+        border-radius: 50%;
+        transition: background 0.3s ease;
+    }
+    .nav-btn:hover {
+        background: rgba(0,0,0,0.6);
+    }
+    .prev { left: 20px; }
+    .next { right: 20px; }
+
+    /* Theme Changer Button */
+    .theme-changer {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #222;
+        border: 2px solid #0ff;
+        padding: 10px 15px;
+        border-radius: 10px;
+        cursor: pointer;
+        color: #0ff;
+        z-index: 1000;
+        font-size: 0.9rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    .theme-changer:hover {
+        transform: scale(1.05);
+    }
+
+    /* Themes */
+    body.light {
+        background: #fff;
+        color: #222;
+    }
+    body.light .gallery img { border-color: #555; }
+    body.light .details { background: #f7f7f7; }
+    body.light .theme-changer { background: #eee; color: #222; border-color: #555; }
+
+    body.dark {
+        background: #121212;
+        color: #eee;
+    }
+    body.dark .gallery img { border-color: #0ff; }
+    body.dark .details { background: rgba(255,255,255,0.05); }
+    body.dark .theme-changer { background: #222; color: #0ff; border-color: #0ff; }
+
+    body.synthwave {
+        background: #1a0033;
+        color: #ff00ff;
+    }
+    body.synthwave .gallery img { border-color: #ff00ff; }
+    body.synthwave .details { background: rgba(255,0,255,0.05); }
+    body.synthwave .theme-changer { background: #330066; color: #ff00ff; border-color: #ff00ff; }
+
+    body.radioactive {
+        background: #001a00;
+        color: #39ff14;
+    }
+    body.radioactive .gallery img { border-color: #39ff14; }
+    body.radioactive .details { background: rgba(57,255,20,0.05); }
+    body.radioactive .theme-changer { background: #003300; color: #39ff14; border-color: #39ff14; }
+
+    body.glitched {
+        background: black;
+        color: white;
+        animation: glitch-bg 1s infinite;
+    }
+    @keyframes glitch-bg {
+        0%, 100% { background: black; }
+        50% { background: #111; }
+    }
+    body.glitched .gallery img { border-color: red; animation: glitch-border 0.3s infinite; }
+    @keyframes glitch-border {
+        0%, 100% { border-color: red; }
+        50% { border-color: blue; }
+    }
+    body.glitched .theme-changer { background: #222; color: red; border-color: blue; }
+</style>
+</head>
+<body>
+
+<h1 id="location-title">Bob Family House</h1>
+<hr>
+
+<div class="gallery" id="gallery">
+    	<img src="https://nmkgnvayhufsyhaikocz.supabase.co/storage/v1/object/public/TREDTSMP/Bob-Family-House/1.png" alt="Academy of Personnels View 1">
+    	<img src="https://nmkgnvayhufsyhaikocz.supabase.co/storage/v1/object/public/TREDTSMP/Bob-Family-House/2.png" alt="Academy of Personnels View 2">
+	<img src="https://nmkgnvayhufsyhaikocz.supabase.co/storage/v1/object/public/TREDTSMP/Bob-Family-House/3.png" alt="Academy of Personnels View 3">
+    	<img src="https://nmkgnvayhufsyhaikocz.supabase.co/storage/v1/object/public/TREDTSMP/Bob-Family-House/4.png" alt="Academy of Personnels View 4">      	<img src="https://nmkgnvayhufsyhaikocz.supabase.co/storage/v1/object/public/TREDTSMP/Bob-Family-House/5.png" alt="Academy of Personnels View 5">
+</div>
+
+<div class="details">
+    <p><strong>Name:</strong> Bob Family House</p>
+    <p><strong>Year Made:</strong> 2024</p>
+    <p><strong>Property Owner:</strong> Vizlandia State Govt.</p>
+</div>
+
+<footer>© TREDT Publications Society(Regd.) All rights Reserved.</footer>
+
+<!-- Fullscreen Image Modal -->
+<div class="modal" id="imageModal">
+    <span class="close" id="closeModal">&times;</span>
+    <span class="nav-btn prev" id="prevImg">&#10094;</span>
+    <span class="nav-btn next" id="nextImg">&#10095;</span>
+    <img id="modalImage" src="">
+</div>
+
+<!-- Theme Changer -->
+<div class="theme-changer" id="themeChanger">Theme: Dark</div>
+
+<script>
+    // Image Modal Script
+    const images = document.querySelectorAll('.gallery img');
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const closeModal = document.getElementById('closeModal');
+    const prevBtn = document.getElementById('prevImg');
+    const nextBtn = document.getElementById('nextImg');
+
+    let currentIndex = 0;
+
+    function openModal(index) {
+        currentIndex = index;
+        modal.style.display = 'block';
+        modalImg.src = images[currentIndex].src;
+    }
+    function closeModalFn() { modal.style.display = 'none'; }
+    function showNext() { currentIndex = (currentIndex + 1) % images.length; modalImg.src = images[currentIndex].src; }
+    function showPrev() { currentIndex = (currentIndex - 1 + images.length) % images.length; modalImg.src = images[currentIndex].src; }
+
+    images.forEach((img, index) => img.addEventListener('click', () => openModal(index)));
+    closeModal.addEventListener('click', closeModalFn);
+    nextBtn.addEventListener('click', showNext);
+    prevBtn.addEventListener('click', showPrev);
+    window.addEventListener('click', (e) => { if (e.target === modal) closeModalFn(); });
+
+    // Theme Changer Script
+    const themes = ["dark", "light", "synthwave", "radioactive", "glitched"];
+    let currentThemeIndex = 0;
+    const themeChanger = document.getElementById('themeChanger');
+
+    function setTheme(theme) {
+        document.body.className = theme;
+        themeChanger.textContent = "Theme: " + theme.charAt(0).toUpperCase() + theme.slice(1);
+        localStorage.setItem("selectedTheme", theme);
+    }
+
+    themeChanger.addEventListener('click', () => {
+        currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+        setTheme(themes[currentThemeIndex]);
+    });
+
+    const savedTheme = localStorage.getItem("selectedTheme");
+    if (savedTheme && themes.includes(savedTheme)) {
+        currentThemeIndex = themes.indexOf(savedTheme);
+        setTheme(savedTheme);
+    } else {
+        setTheme(themes[0]);
+    }
+</script>
+
+</body>
+</html>
